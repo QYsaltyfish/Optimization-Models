@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 3.10)
+# set(CMAKE_BUILD_TYPE "Release")
+project(MyProject)
+
+add_executable(Matrix Matrix.cpp)
+add_executable(test_LpVariable ./test/test_LpVariable.cpp LpVariable.cpp)
+add_executable(test_LpProblem ./test/test_Lpproblem.cpp LpProblem.cpp LpVariable.cpp)
+add_executable(test_SimplexAlgorithm ./test/test_SimplexAlgorithm.cpp SimplexAlgorithm.cpp LpProblem.cpp LpVariable.cpp)
+add_executable(LP1 ./LPtest/LP1.cpp SimplexAlgorithm.cpp LpProblem.cpp LpVariable.cpp)
+add_executable(LP2 ./LPtest/LP2.cpp SimplexAlgorithm.cpp LpProblem.cpp LpVariable.cpp)
+add_executable(LP3 ./LPtest/LP3.cpp SimplexAlgorithm.cpp LpProblem.cpp LpVariable.cpp)
+add_executable(LP4 ./LPtest/LP4.cpp SimplexAlgorithm.cpp LpProblem.cpp LpVariable.cpp)
