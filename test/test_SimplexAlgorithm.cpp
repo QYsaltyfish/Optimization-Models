@@ -1,3 +1,7 @@
+//
+// Created by QY.
+//
+
 #include "../SimplexAlgorithm.h"
 
 int main() {
@@ -18,5 +22,6 @@ int main() {
     problem.display();
 
     auto simplex = SimplexAlgorithm(problem);
-    simplex.solve();
+    double optimal_solution = simplex.solve();
+    std::cout << "The optimal solution: " << optimal_solution;
 }

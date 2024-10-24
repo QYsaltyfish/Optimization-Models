@@ -1,3 +1,7 @@
+//
+// Created by QY.
+//
+
 #include "../LpVariable.h"
 
 int main() {
