@@ -6,6 +6,7 @@ This repository contains implementations of optimization models, primarily focus
 
 - **LPtest/**: Contains examples of using the LP model.
 - **test/**: Contains test files for various classes.
+- **build/**: Contains the compiled executable files.
 - **CMakeLists.txt**: Configuration file for CMake.
 - **LpProblem.cpp / .h**: Implementation of the linear programming problem class.
 - **LpVariable.cpp / .h**: Implementation of the linear programming variable class.
@@ -60,6 +61,16 @@ We have developed a user-friendly GUI interface that allows users to select the 
 - Choose the solving method (e.g., Simplex Method).
 - Load your CSV file through the file explorer.
 - This GUI aims to simplify the process of solving optimization problems for users who prefer a visual interface.
+
+## Precompiled Executable
+
+In the `build` directory, precompiled executable files are available. If you prefer not to configure the compilation environment, you can directly use the executables.
+
+To run the precompiled executable, use the following command:
+
+```bash
+./build/your_executable_name
+```
 
 ## Future Work
 
