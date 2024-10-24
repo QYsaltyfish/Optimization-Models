@@ -11,7 +11,6 @@ set(CMAKE_BUILD_TYPE Release)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
-# 原有的可执行文件
 add_executable(Matrix Matrix.cpp)
 add_executable(test_LpVariable ./test/test_LpVariable.cpp LpVariable.cpp)
 add_executable(test_LpProblem ./test/test_LpProblem.cpp LpProblem.cpp LpVariable.cpp)
@@ -22,7 +21,6 @@ add_executable(LP3 ./LP_test/LP3.cpp SimplexAlgorithm.cpp LpProblem.cpp LpVariab
 add_executable(LP4 ./LP_test/LP4.cpp SimplexAlgorithm.cpp LpProblem.cpp LpVariable.cpp)
 add_executable(LP5 ./LP_test/LP5.cpp SimplexAlgorithm.cpp LpProblem.cpp LpVariable.cpp)
 
-# Qt GUI 部分
 set(PROJECT_SOURCES
         main.cpp
         mainwindow.cpp
@@ -44,7 +42,6 @@ endif()
 
 target_link_libraries(main PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
-# 设置属性
 set_target_properties(main PROPERTIES
         MACOSX_BUNDLE TRUE
         WIN32_EXECUTABLE TRUE
