@@ -1,3 +1,7 @@
+//
+// Created by QY.
+//
+
 #ifndef LpVariable_H
 #define LpVariable_H
 

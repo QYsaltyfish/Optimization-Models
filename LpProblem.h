@@ -1,3 +1,7 @@
+//
+// Created by QY.
+//
+
 #ifndef LpProblem_H
 #define LpProblem_H
 
@@ -9,15 +13,15 @@ class SimplexAlgorithm;
 class LpProblem {
     friend class SimplexAlgorithm;
 
-    std::vector<double> obj_coefs;
-    double obj_b;
-    std::vector<std::vector<double>> coefs;
-    std::vector<double> b;
+    std::vector<double> obj_coefs;  // Coefficients of the objective function
+    double obj_b;  // Right-hand side value of the objective function
+    std::vector<std::vector<double>> coefs;  // Coefficients of the constraints
+    std::vector<double> b;  // Right-hand side values of the constraints
 
-    std::vector<LpVariable> variables;
-    unsigned int num_variables;
+    std::vector<LpVariable> variables;  // List of LP variables
+    unsigned int num_variables;  // Number of variables in the LP problem
 
-    bool objective_inited;
+    bool objective_inited;  // Flag to check if the objective function is initialized
     void _add_constraint(const Expression& constraint);
 
     void transform_lower_bound(const int& idx);
