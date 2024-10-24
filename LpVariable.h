@@ -5,6 +5,8 @@
 #include <limits>
 #include <vector>
 
+#define inf std::numeric_limits<double>::infinity()
+
 class Expression;
 class SimplexAlgorithm;
 
@@ -20,7 +22,7 @@ class LpVariable {
     double value;
 
 public:
-    explicit LpVariable(const double& low = 0, const double& up = std::numeric_limits<double>::infinity());
+    explicit LpVariable(const double& low = -inf, const double& up = inf);
 
     Expression operator+(const LpVariable& other) const;
     Expression operator-(const LpVariable& other) const;

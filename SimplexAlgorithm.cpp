@@ -33,7 +33,7 @@ int SimplexAlgorithm::check_column() {
 }
 
 int SimplexAlgorithm::check_row(const int& idx) {
-    double min = std::numeric_limits<double>::infinity();
+    double min = inf;
     int min_idx = -1;
 
     for (int row = 0; row < lp.coefs.size(); ++row) {
@@ -47,7 +47,7 @@ int SimplexAlgorithm::check_row(const int& idx) {
     return min_idx;
 }
 
-void SimplexAlgorithm::solve() {
+double SimplexAlgorithm::solve() {
     int state;
 
     while (true) {
@@ -106,14 +106,10 @@ void SimplexAlgorithm::solve() {
     }
 
     if (state == -1)
-        std::cout << "The problem is unbounded." << std::endl;
+        return inf;
     else {
-        std::cout << "The optimal value is: " << optimal_value << std::endl;
-        std::cout << "The solution is: ";
-        for (int i = 0; i < lp.num_variables; ++i)
-            std::cout << 'x' << i << " = " << solution[i] << ' ';
+        return optimal_value;
     }
-
 }
 
 SimplexAlgorithm::SimplexAlgorithm(const LpProblem &problem): lp(problem), reversed(false) {
@@ -202,7 +198,7 @@ void SimplexAlgorithm::transform_less_equal(const unsigned int &idx) {
 
 void SimplexAlgorithm::transform_upper_bound(const int &idx) {
     // Transform upper bounds by adding surplus variable.
-    if (lp.variables[idx].upper_bound != std::numeric_limits<double>::infinity()) {
+    if (lp.variables[idx].upper_bound != inf) {
         lp.variables.emplace_back(0);
         basis.push_back(lp.num_variables);
         ++lp.num_variables;
@@ -217,7 +213,7 @@ void SimplexAlgorithm::transform_upper_bound(const int &idx) {
         lp.coefs.push_back(new_vector);
 
         lp.b.push_back(lp.variables[idx].upper_bound);
-        lp.variables[idx].upper_bound = std::numeric_limits<double>::infinity();
+        lp.variables[idx].upper_bound = inf;
         lp.obj_coefs.push_back(0);
 
         is_basis.push_back(true);

@@ -2,7 +2,7 @@
 
 
 int main() {
-    LpProblem problem(2);
+    LpProblem problem(LpProblem::MAXIMIZE, 2);
 
     std::cout << std::endl << "Generate a LP problem with 2 variables: " << std::endl;
     const auto vars = problem.get_variables();
@@ -26,12 +26,13 @@ int main() {
 
     std::cout << "Construct a LP problem and display: " << std::endl;
     problem += objective;
+    problem.set_lower_bounds(0);
     problem += constraint1;
     problem += constraint2;
     problem.display();
 
-    std::cout << std::endl;
-    std::cout << "Now we can transform the problem to standard form: " << std::endl;
-    problem.transform_problem();
-    problem.display();
+    std::cout << "Construct a LP problem from csv file: " << std::endl;
+    std::string csvFilePath = "../test/LpProblem.csv";
+    LpProblem problem2(csvFilePath);
+    problem2.display();
 }

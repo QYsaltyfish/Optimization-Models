@@ -21,7 +21,7 @@ class SimplexAlgorithm {
 public:
     explicit SimplexAlgorithm(const LpProblem& problem);
 
-    void solve();
+    double solve();
 };
 
 #endif

@@ -374,25 +374,16 @@ Expression LpVariable::operator/(const double& scalar) const {
 }
 
 void LpVariable::set_bound(const double &low, const double &up) {
-    if (low > up)
-        throw std::invalid_argument("The upper bound must be greater than or equal to the lower bound.");
-
-    lower_bound = low;
-    upper_bound = up;
+    lower_bound = low > lower_bound ? low : lower_bound;
+    upper_bound = up < upper_bound ? up : upper_bound;
 }
 
 void LpVariable::set_lower_bound(const double &low) {
-    if (low > upper_bound)
-        throw std::invalid_argument("The lower bound must be less than or equal to the upper bound.");
-
-    lower_bound = low;
+    lower_bound = low > lower_bound ? low : lower_bound;
 }
 
 void LpVariable::set_upper_bound(const double &up) {
-    if (up < lower_bound)
-        throw std::invalid_argument("The upper bound must be greater than or equal to the lower bound.");
-
-    upper_bound = up;
+    upper_bound = up < upper_bound ? up : upper_bound;
 }
 
 std::ostream& operator<<(std::ostream& os, const LpVariable& var) {

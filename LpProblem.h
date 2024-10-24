@@ -27,6 +27,7 @@ public:
 
     LpProblem(const ObjectiveType& obj, const unsigned int& num_vars);
     LpProblem(const ObjectiveType& obj, const Expression& objective_func);
+    explicit LpProblem(const std::string& csvFilePath);
     LpProblem(const LpProblem& other) = default;
 
     void add_constraint(const Expression& constraint);
@@ -34,8 +35,11 @@ public:
     [[nodiscard]] const std::vector<LpVariable>& get_variables() const;
 
     void set_variable_bound(const int& id, const double& low, const double& up);
+    void set_bounds(const double& low, const double& up);
     void set_variable_lower_bound(const int& id, const double& low);
+    void set_lower_bounds(const double& low);
     void set_variable_upper_bound(const int& id, const double& up);
+    void set_upper_bounds(const double& up);
 
     LpProblem& operator+=(const Expression& constraint);
 
