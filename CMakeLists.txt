@@ -6,7 +6,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
@@ -15,11 +15,13 @@ add_executable(Matrix Matrix.cpp)
 add_executable(test_LpVariable ./test/test_LpVariable.cpp LpVariable.cpp)
 add_executable(test_LpProblem ./test/test_LpProblem.cpp LpProblem.cpp LpVariable.cpp)
 add_executable(test_SimplexAlgorithm ./test/test_SimplexAlgorithm.cpp SimplexAlgorithm.cpp LpProblem.cpp LpVariable.cpp)
+add_executable(test_LKHSolver ./test/test_LKHSolver.cpp TSP.cpp)
 add_executable(LP1 ./LP_test/LP1.cpp SimplexAlgorithm.cpp LpProblem.cpp LpVariable.cpp)
 add_executable(LP2 ./LP_test/LP2.cpp SimplexAlgorithm.cpp LpProblem.cpp LpVariable.cpp)
 add_executable(LP3 ./LP_test/LP3.cpp SimplexAlgorithm.cpp LpProblem.cpp LpVariable.cpp)
 add_executable(LP4 ./LP_test/LP4.cpp SimplexAlgorithm.cpp LpProblem.cpp LpVariable.cpp)
 add_executable(LP5 ./LP_test/LP5.cpp SimplexAlgorithm.cpp LpProblem.cpp LpVariable.cpp)
+add_executable(TSP1 ./TSP_test/TSP1.cpp TSP.cpp)
 
 set(PROJECT_SOURCES
         main.cpp
