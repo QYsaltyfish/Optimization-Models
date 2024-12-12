@@ -63,12 +63,19 @@ LKHSolver::~LKHSolver() {
 
 void LKHSolver::solve() {
     create_candidate_set();
-    solution = find_tour();
-    solved = true;
+    if (!solved)
+        solution = find_tour();
 }
 
 void LKHSolver::create_candidate_set() {
     int lower_bound = ascent();
+
+    if (solved) {
+        solution = lower_bound;
+        generate_best_tour_from_one_tree();
+        rearrange_tour();
+        return;
+    }
 
     minimum_one_tree(true);
     topological_sort();
@@ -85,6 +92,7 @@ int LKHSolver::ascent() {
 
     // Check whether the minimal 1-tree is a valid tour
     if (all_zero(v)) {
+        solved = true;
         return one_tree_size;
     }
 
@@ -101,6 +109,7 @@ int LKHSolver::ascent() {
 
             one_tree_size = minimum_one_tree();
             if (all_zero(v)) {
+                solved = true;
                 return one_tree_size;
             }
 
@@ -354,7 +363,7 @@ int LKHSolver::find_tour() {
 
         has_find_tour = true;
     }
-
+    rearrange_tour();
     return best_cost;
 }
 
@@ -571,4 +580,38 @@ void LKHSolver::update_ranks() {
         node->rank = r++;
         node = node->suc;
     } while (node != first_node);
+}
+
+void LKHSolver::rearrange_tour() {
+    // Check if the tour is empty
+    if (best_tour.empty()) {
+        return;
+    }
+
+    // Find the position of the start node in the tour
+    auto it = std::find(best_tour.begin(), best_tour.end(), start);
+
+    // Compute the index of the start node
+    int start_index = (int) std::distance(best_tour.begin(), it);
+
+    // Rearrange the tour to start from the specified node
+    std::rotate(best_tour.begin(), best_tour.begin() + start_index, best_tour.end());
+}
+
+void LKHSolver::generate_best_tour_from_one_tree() {
+    int right_count = 0, left_count = 0;
+    int node = edge_end_1;
+
+    while (node != -1) {
+        best_tour[n - 1 - right_count] = node;
+        node = dad[node];
+        ++right_count;
+    }
+
+    node = edge_end_2;
+    while (left_count + right_count < n) {
+        best_tour[left_count] = node;
+        node = dad[node];
+        ++left_count;
+    }
 }

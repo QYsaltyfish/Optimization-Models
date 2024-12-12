@@ -79,6 +79,8 @@ class LKHSolver {
     void find_second_closest_max_neighbor_leaf();
     void topological_sort();
 
+    void generate_best_tour_from_one_tree();
+
     // Part 2: Solve the problem
     int find_tour();
     void choose_initial_tour();
@@ -93,7 +95,7 @@ class LKHSolver {
     void update_ranks();
 
     void record_better_tour();
-
+    void rearrange_tour();
 public:
     explicit LKHSolver(TspProblem& p, int candidates = 5, int runs = 1);
     ~LKHSolver();
