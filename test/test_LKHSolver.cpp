@@ -19,8 +19,9 @@ int main() {
     };
     TspProblem problem1 = TspProblem(adj_matrix, 0);
     LKHSolver solver1 = LKHSolver(problem1);
-    // std::cout << solver1.ascent();
-    solver1.create_candidate_set();
+    solver1.solve();
+
+    std::cout << solver1.solution;
 
     return 0;
 }

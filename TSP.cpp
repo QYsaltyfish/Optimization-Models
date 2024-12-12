@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <stack>
+#include <numeric>
 
 TspProblem::TspProblem(const std::vector<std::vector<int>>& adjacency_matrix, int s)
         : n((int) adjacency_matrix.size()), start(s), adj_matrix(adjacency_matrix) {
@@ -23,6 +24,9 @@ LKHSolver::LKHSolver(TspProblem &p, int candidates, int runs) {
     max_candidates = candidates;
     run_times = runs;
 
+    std::random_device rd;
+    gen = std::mt19937(rd());
+
     candidate_nodes = std::vector<std::vector<int>>(n, std::vector<int>(max_candidates, -1));
     candidate_alphas = std::vector<std::vector<int>>(n, std::vector<int>(max_candidates, INT_MAX));
 
@@ -36,18 +40,31 @@ LKHSolver::LKHSolver(TspProblem &p, int candidates, int runs) {
     key = std::vector<int>(n, INT_MAX);
     pi = std::vector<int>(n, 0);
     best_pi = std::vector<int>(n, 0);
+
+    tour = std::vector<int>(n, -1);
+    best_tour = std::vector<int>(n, -1);
+    in_best_tour = std::vector<std::vector<bool>>(n, std::vector<bool>(n, false));
+    node_ptr = std::vector<Node*>(n, nullptr);
 }
 
-LKHSolver::~LKHSolver() = default;
+LKHSolver::~LKHSolver() {
+    if (first_node == nullptr)
+        return;
+
+    Node* current = first_node;
+    do {
+        Node* next = current->suc;
+        delete current;
+        current = next;
+    } while (current != first_node);
+
+    first_node = nullptr;
+}
 
 void LKHSolver::solve() {
     create_candidate_set();
-    int best_cost = INT_MAX;
-
-    for (int run = 0; run < run_times; ++run) {
-        int cost = find_tour();
-        best_cost = cost < best_cost ? cost : best_cost;
-    }
+    solution = find_tour();
+    solved = true;
 }
 
 void LKHSolver::create_candidate_set() {
@@ -56,10 +73,6 @@ void LKHSolver::create_candidate_set() {
     minimum_one_tree(true);
     topological_sort();
     generate_candidates((int) excess * lower_bound);
-}
-
-int LKHSolver::find_tour() {
-    return 0;
 }
 
 int LKHSolver::ascent() {
@@ -71,7 +84,6 @@ int LKHSolver::ascent() {
     best_one_tree_size = one_tree_size;
 
     // Check whether the minimal 1-tree is a valid tour
-
     if (all_zero(v)) {
         return one_tree_size;
     }
@@ -111,14 +123,18 @@ int LKHSolver::ascent() {
     return best_one_tree_size;
 }
 
-int LKHSolver::minimum_one_tree(bool maintain_children) {
+int LKHSolver::minimum_one_tree(bool final_trial) {
     std::fill(v.begin(), v.end(), -2);
 
-    int mst_size = minimum_spanning_tree(maintain_children);
+    int mst_size = minimum_spanning_tree(final_trial);
     find_second_closest_max_neighbor_leaf();
 
     ++v[edge_end_1];
     ++v[edge_end_2];
+    if (final_trial) {
+        in_best_tour[edge_end_1][edge_end_2] = true;
+        in_best_tour[edge_end_2][edge_end_1] = true;
+    }
 
     int sum_pi = 0;
     for (const int& pi_value: pi) {
@@ -162,7 +178,7 @@ void LKHSolver::find_second_closest_max_neighbor_leaf() {
     }
 }
 
-int LKHSolver::minimum_spanning_tree(bool maintain_children) {
+int LKHSolver::minimum_spanning_tree(bool final_trial) {
     // TODO: May use a heap to speed up when the graph is sparse
     std::fill(key.begin(), key.end(), INT_MAX);
     std::fill(on_tree.begin(), on_tree.end(), false);
@@ -190,8 +206,11 @@ int LKHSolver::minimum_spanning_tree(bool maintain_children) {
         if (count != 0) {
             ++v[next_vertex];
             ++v[dad[next_vertex]];
-            if (maintain_children)
+            if (final_trial) {
                 children[dad[next_vertex]].push_back(next_vertex);
+                in_best_tour[next_vertex][dad[next_vertex]] = true;
+                in_best_tour[dad[next_vertex]][next_vertex] = true;
+            }
         }
 
         // Update the key values of adjacent vertices
@@ -312,7 +331,6 @@ void LKHSolver::insert_candidate(int from, int to, int alpha) {
     }
 }
 
-
 bool LKHSolver::all_zero(std::vector<int> &vec) {
     return std::all_of(vec.begin(), vec.end(), [](int v_value) { return v_value == 0; });
 }
@@ -321,3 +339,236 @@ int LKHSolver::best_pi_edge(int &from, int &to) const {
     return adj_matrix[from][to] + best_pi[from] + best_pi[to];
 }
 
+int LKHSolver::find_tour() {
+    int best_cost = INT_MAX;
+    int cost;
+
+    for (int run = 0; run < run_times; ++run) {
+        choose_initial_tour();
+        generate_node_list();
+        cost = lin_kernighan();
+        if (cost < best_cost) {
+            record_better_tour();
+            best_cost = cost;
+        }
+
+        has_find_tour = true;
+    }
+
+    return best_cost;
+}
+
+void LKHSolver::choose_initial_tour() {
+    std::vector<int> not_chosen_nodes(n);
+    std::vector<bool> is_chosen(n, false);
+    std::iota(not_chosen_nodes.begin(), not_chosen_nodes.end(), 0);
+    std::uniform_int_distribution<> dis(0, n - 1);
+
+    // Step 1: Choose a random starting node
+    int i = dis(gen);
+    is_chosen[i] = true;
+    tour[0] = i;
+    std::swap(not_chosen_nodes[i], not_chosen_nodes.back());
+    not_chosen_nodes.pop_back();
+
+    int tour_index = 1;
+    int j, j_idx;
+
+    // Step 2: Iteratively choose the next node
+    while (!not_chosen_nodes.empty()) {
+        std::vector<int> satisfied_nodes;
+
+        // Try to find a node j that satisfies (a), (b), and (c)
+        for (const int& candidate : candidate_nodes[i]) {
+            if (candidate == -1) break;
+            if (has_find_tour &&
+                !is_chosen[candidate] &&
+                candidate_alphas[i][candidate] == 0 &&
+                in_best_tour[i][candidate]) {
+                satisfied_nodes.push_back(candidate);
+            }
+        }
+
+        // If no node satisfies all conditions, try to find a node satisfying (a)
+        if (satisfied_nodes.empty()) {
+            for (const int& candidate : candidate_nodes[i]) {
+                if (candidate == -1) break;
+                if (!is_chosen[candidate]) {
+                    satisfied_nodes.push_back(candidate);
+                }
+            }
+        }
+
+        if (!satisfied_nodes.empty()) {
+            dis = std::uniform_int_distribution<>(0, (int)satisfied_nodes.size() - 1);
+            j = satisfied_nodes[dis(gen)];
+            auto it = std::find(not_chosen_nodes.begin(), not_chosen_nodes.end(), j);
+            j_idx = (int) std::distance(not_chosen_nodes.begin(), it);
+        } else {
+            dis = std::uniform_int_distribution<>(0, (int) not_chosen_nodes.size() - 1);
+            j_idx = dis(gen);
+            j = not_chosen_nodes[j_idx];
+        }
+
+        std::swap(not_chosen_nodes[j_idx], not_chosen_nodes.back());
+        not_chosen_nodes.pop_back();
+
+        tour[tour_index++] = j;
+        is_chosen[j] = true;
+        i = j;
+    }
+}
+
+void LKHSolver::generate_node_list() {
+
+    // Create nodes and link them to form the doubly linked list
+    Node* prev_node = nullptr;
+    for (int i = 0; i < n; ++i) {
+        Node* curr_node = new Node{tour[i], i, prev_node, nullptr};
+        node_ptr[tour[i]] = curr_node;
+        if (prev_node != nullptr) {
+            prev_node->suc = curr_node;
+        } else {
+            first_node = curr_node; // Set the first node
+        }
+        prev_node = curr_node;
+    }
+
+    // Complete the circular doubly linked list
+    if (first_node && prev_node) {
+        first_node->pred = prev_node;
+        prev_node->suc = first_node;
+    }
+}
+
+int LKHSolver::lin_kernighan() {
+    Node *t1 = first_node, *t2;
+    int cost = 0, gain;
+    bool improved = true;
+
+    do {
+        cost += adj_node_cost(t1, t1->suc);
+        t1 = t1->suc;
+    } while (t1 != first_node);
+
+    while (improved) {
+        improved = false;
+        do {
+            t2 = t1->suc;
+            gain = search_3opt(t1, t2);
+            if (gain != -1) {
+                store_tour();
+                cost -= gain;
+                improved = true;
+            }
+            t1 = t1->suc;
+        } while (t1 != first_node);
+    }
+
+    return cost;
+}
+
+int LKHSolver::adj_node_cost(LKHSolver::Node *node1, LKHSolver::Node *node2) {
+    return adj_matrix[node1->id][node2->id];
+}
+
+int LKHSolver::search_3opt(LKHSolver::Node *t1, LKHSolver::Node *t2) {
+    Node *t3, *t4, *t5, *t6;
+    int cost_left = 0, cost_right = adj_node_cost(t1, t2);
+
+    for (const int& t2_candidate: candidate_nodes[t2->id]) {
+        if (t2_candidate == -1) break;
+
+        t3 = node_ptr[t2_candidate];
+        if (t3 == t1 || t3 == t2->suc ||
+                cost_left + adj_node_cost(t2, t3) >= cost_right) {
+            continue;
+        }
+        t4 = t3->suc;
+        cost_left += adj_node_cost(t2, t3);
+        cost_right += adj_node_cost(t3, t4);
+
+        for (const int& t4_candidate: candidate_nodes[t4->id]) {
+            if (t4_candidate == -1) break;
+
+            t5 = node_ptr[t4_candidate];
+            if (!between(t5, t2, t3) || t5 == t3 ||
+                    cost_left + adj_node_cost(t4, t5) >= cost_right) {
+                continue;
+            }
+            t6 = t5->suc;
+            cost_left += adj_node_cost(t4, t5);
+
+            if (cost_left + adj_node_cost(t1, t6) < cost_right + adj_node_cost(t5, t6)) {
+                make_3opt_move(t1, t2, t3, t4, t5, t6);
+                return cost_right + adj_node_cost(t5, t6) - cost_left - adj_node_cost(t1, t6);
+            }
+            cost_left -= adj_node_cost(t4, t5);
+        }
+        cost_left -= adj_node_cost(t2, t3);
+        cost_right -= adj_node_cost(t3, t4);
+    }
+
+    return -1;
+}
+
+void LKHSolver::record_better_tour() {
+    best_tour = tour;
+    std::fill(in_best_tour.begin(), in_best_tour.end(), std::vector<bool>(n, false));
+
+    for (int i = 0; i < n - 1; ++i) {
+        in_best_tour[tour[i]][tour[i + 1]] = true;
+        in_best_tour[tour[i + 1]][tour[i]] = true;
+    }
+    in_best_tour[tour[0]][tour.back()] = true;
+    in_best_tour[tour.back()][tour[0]] = true;
+}
+
+void LKHSolver::store_tour() {
+    Node *node = first_node;
+
+    do {
+        tour[node->rank] = node->id;
+    } while (node != first_node);
+}
+
+bool LKHSolver::between(LKHSolver::Node *t1, LKHSolver::Node *t2, LKHSolver::Node *t3) {
+    // Use rank to determine the relative order in O(1) time.
+    // Normalize ranks to handle circular comparisons.
+    int rank1 = t1->rank;
+    int rank2 = t2->rank;
+    int rank3 = t3->rank;
+
+    // Check if t1 is between t2 and t3 in the forward direction.
+    // This works because in a circular list, (rank2 < rank1 < rank3)
+    // or (rank3 < rank2 and rank1 wraps around) are the valid conditions.
+    if ((rank2 <= rank1 && rank1 <= rank3) || (rank3 < rank2 && (rank1 >= rank2 || rank1 <= rank3))) {
+        return true;
+    }
+
+    return false;
+}
+
+void LKHSolver::make_3opt_move(LKHSolver::Node *t1, LKHSolver::Node *t2, LKHSolver::Node *t3, LKHSolver::Node *t4,
+                               LKHSolver::Node *t5, LKHSolver::Node *t6) {
+    t1->suc = t6;
+    t6->pred = t1;
+
+    t3->suc = t2;
+    t2->pred = t3;
+
+    t5->suc = t4;
+    t4->pred = t5;
+
+    update_ranks();
+}
+
+void LKHSolver::update_ranks() {
+    int r = 0;
+    Node *node = first_node;
+
+    do {
+        node->rank = r++;
+        node = node->suc;
+    } while (node != first_node);
+}
