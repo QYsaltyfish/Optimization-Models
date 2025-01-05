@@ -12,6 +12,7 @@ This repository contains implementations of optimization models, primarily focus
 - **LpVariable.cpp / .h**: Implementation of the linear programming variable class.
 - **Matrix.cpp / .h**: Implementation of matrix operations.
 - **SimplexAlgorithm.cpp / .h**: Implementation of the Simplex Algorithm.
+- **TSP.cpp / .h**: Implementation of the Traveling Salesman Problem (TSP) and its solver.
 - **mainwindow.cpp / .h / .ui**: Implementation of the main window's functionality and UI design.
 - **main.cpp**: The main file for the GUI interface.
 
@@ -72,6 +73,16 @@ To run the precompiled executable, use the following command:
 ./build/your_executable_name
 ```
 
+## Implemented Models and Solvers
+
+### 1. Linear Programming (LP)
+
+- Solver: Simplex Method
+  
+### 2. Traveling Salesman Problem (TSP)
+
+- Solver: LKH Algorithm 2.0
+  
 ## Future Work
 
 - Add more solving methods, including the Interior Point Method.
