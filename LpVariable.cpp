@@ -253,7 +253,7 @@ Expression Expression::operator>=(const Expression& other) const {
     Expression result(arr.size(), false);
     for (int i = 0; i < arr.size(); ++i)
         result.arr[i] = other.arr[i] - arr[i];
-    result.b -= other.b;
+    result.b = b - other.b;
     result.exp_type = LESS_EQUAL;
 
     return result;

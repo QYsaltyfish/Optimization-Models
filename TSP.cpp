@@ -7,11 +7,87 @@
 #include <algorithm>
 #include <stack>
 #include <numeric>
+#include <fstream>
+#include <sstream>
 
 TspProblem::TspProblem(const std::vector<std::vector<int>>& adjacency_matrix, int s)
         : n((int) adjacency_matrix.size()), start(s), adj_matrix(adjacency_matrix) {
     if (adjacency_matrix.size() != adjacency_matrix[0].size()) {
         throw std::invalid_argument("The adjacency matrix is not square.");
+    }
+}
+
+TspProblem::TspProblem(const std::string &csvFilePath) {
+    std::ifstream file(csvFilePath);  // Open the CSV file
+    std::string line;  // Line buffer for reading
+
+    if (std::getline(file, line)) {
+        n = std::stoi(line);
+        adj_matrix = std::vector<std::vector<int>>(n, std::vector<int>(n, -1));
+    } else {
+        throw std::invalid_argument("The first line must be the number of nodes n.");
+    }
+
+    if (std::getline(file, line)) {
+        start = std::stoi(line);
+    } else {
+        throw std::invalid_argument("The second line must be the start node");
+    }
+
+    while (std::getline(file, line)) {
+        std::stringstream ss(line);
+        std::string token;
+        int i;
+        int j;
+        int distance;
+
+        if (std::getline(ss, token, ',')) {
+            try {
+                i = std::stoi(token);
+            } catch (const std::invalid_argument& e) {
+                throw std::invalid_argument("Invalid value for 'i' in line: " + line);
+            }
+        } else {
+            throw std::invalid_argument("Missing 'i' value in line: " + line);
+        }
+
+        if (std::getline(ss, token, ',')) {
+            try {
+                j = std::stoi(token);
+            } catch (const std::invalid_argument& e) {
+                throw std::invalid_argument("Invalid value for 'j' in line: " + line);
+            }
+        } else {
+            throw std::invalid_argument("Missing 'j' value in line: " + line);
+        }
+
+        if (std::getline(ss, token, ',')) {
+            try {
+                distance = std::stoi(token);
+                if (distance < 0) {
+                    throw std::invalid_argument("Distance cannot be negative in line: " + line);
+                }
+            } catch (const std::invalid_argument& e) {
+                throw std::invalid_argument("Invalid value for 'distance' in line: " + line);
+            }
+        } else {
+            throw std::invalid_argument("Missing 'distance' value in line: " + line);
+        }
+
+        adj_matrix[i][j] = distance;
+    }
+
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            if (i == j) {
+                adj_matrix[i][j] = 0;
+                continue;
+            }
+
+            if (adj_matrix[i][j] == -1) {
+                adj_matrix[i][j] = INT_MAX;
+            }
+        }
     }
 }
 

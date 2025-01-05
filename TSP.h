@@ -17,6 +17,7 @@ struct TspProblem {
     std::vector<std::vector<int>> adj_matrix;
 
     TspProblem(const std::vector<std::vector<int>>& adjacency_matrix, int s);
+    explicit TspProblem(const std::string &csvFilePath);
 };
 
 class LKHSolver {

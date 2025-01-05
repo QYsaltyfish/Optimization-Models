@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(MyProject VERSION 0.1 LANGUAGES CXX)
+set(CMAKE_BUILD_TYPE Release)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -30,6 +31,7 @@ set(PROJECT_SOURCES
         SimplexAlgorithm.cpp
         LpProblem.cpp
         LpVariable.cpp
+        TSP.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

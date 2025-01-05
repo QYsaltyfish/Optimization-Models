@@ -7,7 +7,6 @@
 
 int main() {
 
-    // Test Prim algorithm
     std::vector<std::vector<int>> adj_matrix = {
             {0, 23, 10000, 10000, 10000, 28, 36},
             {23, 0, 20, 10000, 10000, 10000, 1},

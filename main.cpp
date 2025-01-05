@@ -10,6 +10,7 @@
 #include <QFileDialog>
 #include <QLabel>
 #include "SimplexAlgorithm.h"
+#include "TSP.h"
 
 class SolverApp : public QWidget {
 public:
@@ -19,7 +20,9 @@ public:
 
         // Create problem type selection box
         problemTypeCombo = new QComboBox();
-        problemTypeCombo->addItems({"Linear Programming", "Integer Programming"});
+        problemTypeCombo->addItems(
+                {"Linear Programming", "Integer Programming", "Travelling Salesman Problem (TSP)"}
+                );
 
         // Create solution method selection box
         methodCombo = new QComboBox();
@@ -75,6 +78,10 @@ private slots:
             if (method == "Simplex Method") {
                 simplexMethod();
             }
+        } else if (problemType == "Travelling Salesman Problem (TSP)") {
+            if (method == "LKH Solver") {
+                LKH();
+            }
         }
     }
 
@@ -94,6 +101,8 @@ private:
             methodCombo->addItems({"Simplex Method", "Interior Point Method (not yet finished)"});
         } else if (problemType == "Integer Programming") {
             methodCombo->addItems({"Not yet finished."});
+        } else if (problemType == "Travelling Salesman Problem (TSP)") {
+            methodCombo->addItems({"LKH Solver"});
         }
     }
 
@@ -108,6 +117,18 @@ private:
             } else {
                 OutputLabel->setText("The problem is unbounded");
             }
+        } catch (const std::invalid_argument& e) {
+            OutputLabel->setText("Error: " + QString::fromStdString(e.what()));
+        }
+    }
+
+    void LKH() {
+        try {
+            TspProblem problem = TspProblem(csvFilePath);
+            OutputLabel->setText("Solving...");
+            auto solver = LKHSolver(problem);
+            solver.solve();
+            OutputLabel->setText(QString("Optimal Value: %1").arg(solver.solution));
         } catch (const std::invalid_argument& e) {
             OutputLabel->setText("Error: " + QString::fromStdString(e.what()));
         }
